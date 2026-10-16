@@ -1,0 +1,8 @@
+services:
+  telegram-sheets-bot:
+    build: .
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./credentials.json:/app/credentials.json:ro

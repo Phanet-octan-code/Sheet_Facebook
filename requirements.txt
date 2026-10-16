@@ -1,0 +1,6 @@
+# Telegram Bot & Google Sheets Integration
+python-telegram-bot>=21.0
+gspread>=6.1.0
+google-auth>=2.29.0
+python-dotenv>=1.0.1
+httpx>=0.28.0

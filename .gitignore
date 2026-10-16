@@ -1,0 +1,29 @@
+# Environment variables and secrets
+.env
+*.env.local
+
+# Google Service Account keys and credentials
+credentials.json
+service_account.json
+*credentials*.json
+*service_account*.json
+
+# Logs
+*.log
+logs/
+
+# Python cache and environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+env/
+venv/
+ENV/
+
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
