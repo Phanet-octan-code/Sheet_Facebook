@@ -11,6 +11,7 @@ Features:
 from __future__ import annotations
 
 import logging
+import sys
 from typing import Any
 
 from telegram import Update
@@ -246,6 +247,22 @@ def build_application() -> Application:
 def main() -> None:
     """Main execution function."""
     logger.info("Initializing Facebook Account Telegram Bot...")
+
+    # Validate configuration before building application
+    validation = config.validate_config()
+    for warning in validation.get("warnings", []):
+        logger.warning("Config warning: %s", warning)
+
+    if validation.get("errors"):
+        for err in validation["errors"]:
+            logger.critical("Config error: %s", err)
+        logger.critical(
+            "Bot startup failed due to missing configuration. "
+            "Make sure your .env file exists and contains TELEGRAM_BOT_TOKEN. "
+            "(On PythonAnywhere/servers, .env must be created manually because it is git-ignored)."
+        )
+        sys.exit(1)
+
     app = build_application()
     logger.info("Bot is starting polling... Press Ctrl+C to stop.")
     app.run_polling(drop_pending_updates=True)
