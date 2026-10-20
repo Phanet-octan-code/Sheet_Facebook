@@ -37,11 +37,21 @@ GOOGLE_CREDENTIALS_JSON: str = (
     os.getenv("GOOGLE_CREDENTIALS_JSON") or os.getenv("GOOGLE_CREDENTIALS", "")
 ).strip()
 
-# Option B2: Google Service Account JSON file on disk
-_creds_path_str = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE", "credentials.json").strip()
-GOOGLE_SERVICE_ACCOUNT_FILE: Path = (
-    Path(_creds_path_str) if Path(_creds_path_str).is_absolute() else (BASE_DIR / _creds_path_str)
-)
+# Option B2: Google Service Account JSON file on disk (supports local and Render /etc/secrets/)
+def resolve_service_account_path() -> Path:
+    custom_path = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE", "").strip()
+    if custom_path:
+        p = Path(custom_path)
+        return p if p.is_absolute() else (BASE_DIR / p)
+    local_path = BASE_DIR / "credentials.json"
+    if local_path.exists():
+        return local_path
+    render_path = Path("/etc/secrets/credentials.json")
+    if render_path.exists():
+        return render_path
+    return local_path
+
+GOOGLE_SERVICE_ACCOUNT_FILE: Path = resolve_service_account_path()
 
 GOOGLE_SHEET_NAME: str = os.getenv("GOOGLE_SHEET_NAME", "Telegram Safe Records").strip()
 GOOGLE_SHEET_ID: str = os.getenv("GOOGLE_SHEET_ID", "16GqNZYKqV1LCaG2C8B_etNfn-CRycB7NfNTv0mFqvNo").strip()

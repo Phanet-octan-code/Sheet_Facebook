@@ -168,15 +168,21 @@ class SheetsService:
             except Exception as e:
                 logger.error("Failed to parse GOOGLE_CREDENTIALS_JSON env var: %s", e)
 
-        # 2. Check credentials.json file on disk
-        if not config.GOOGLE_SERVICE_ACCOUNT_FILE.exists():
+        # 2. Check credentials.json file on disk (including /etc/secrets/ on Render)
+        creds_file = config.GOOGLE_SERVICE_ACCOUNT_FILE
+        if not creds_file.exists():
+            render_path = Path("/etc/secrets/credentials.json")
+            if render_path.exists():
+                creds_file = render_path
+
+        if not creds_file.exists():
             raise FileNotFoundError(
                 f"Google service account file '{config.GOOGLE_SERVICE_ACCOUNT_FILE.name}' was not found. "
-                "Please place your credentials.json in the project root or set GOOGLE_CREDENTIALS_JSON."
+                "Please add Secret File 'credentials.json' on Render or set GOOGLE_CREDENTIALS_JSON."
             )
 
         creds = Credentials.from_service_account_file(
-            str(config.GOOGLE_SERVICE_ACCOUNT_FILE),
+            str(creds_file),
             scopes=scopes,
         )
         return gspread.authorize(creds)
