@@ -11,7 +11,10 @@ Features:
 from __future__ import annotations
 
 import logging
+import os
 import sys
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
 
 from telegram import Update
@@ -37,6 +40,51 @@ logging.basicConfig(
     level=logging.INFO,
 )
 logger = logging.getLogger("telegram_sheets_bot.bot")
+
+
+# -----------------------------------------------------------------------------
+# Cloud Deployment Health Check Server (Render / Railway / etc.)
+# -----------------------------------------------------------------------------
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    """Minimal HTTP handler to satisfy Render's port binding and health checks."""
+
+    def do_GET(self) -> None:
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(b"OK - Facebook Account Telegram Bot is active and running!\n")
+
+    def do_HEAD(self) -> None:
+        self.send_response(200)
+        self.end_headers()
+
+    def log_message(self, format: str, *args: Any) -> None:
+        # Keep logs clean by filtering periodic health check pings to debug level
+        logger.debug("Health check request from %s: %s", self.client_address[0], format % args)
+
+
+def start_health_check_server() -> None:
+    """Spins up a lightweight background HTTP server binding to $PORT when deployed on Render or cloud."""
+    port_env = os.getenv("PORT")
+    is_render = bool(os.getenv("RENDER"))
+
+    # Only bind when running on cloud platform (PORT or RENDER is present)
+    if not port_env and not is_render:
+        logger.debug("PORT and RENDER environment variables not detected; skipping local HTTP server.")
+        return
+
+    port = int(port_env) if port_env and port_env.isdigit() else 10000
+
+    def run_server() -> None:
+        try:
+            server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
+            logger.info("Render health check HTTP server successfully listening on 0.0.0.0:%d", port)
+            server.serve_forever()
+        except Exception as exc:
+            logger.warning("Could not start health check HTTP server on port %d: %s", port, exc)
+
+    thread = threading.Thread(target=run_server, name="HealthCheckServer", daemon=True)
+    thread.start()
 
 
 # -----------------------------------------------------------------------------
@@ -262,6 +310,9 @@ def main() -> None:
             "(On PythonAnywhere/servers, .env must be created manually because it is git-ignored)."
         )
         sys.exit(1)
+
+    # Start health check HTTP server for Render/cloud platforms if PORT or RENDER is present
+    start_health_check_server()
 
     app = build_application()
     logger.info("Bot is starting polling... Press Ctrl+C to stop.")

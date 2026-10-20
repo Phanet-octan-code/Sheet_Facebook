@@ -16,13 +16,15 @@ from dotenv import load_dotenv
 # Base directory of the project
 BASE_DIR: Path = Path(__file__).resolve().parent
 
-# Load environment variables from .env file
-load_dotenv(dotenv_path=BASE_DIR / ".env", override=True)
+# Load environment variables from .env file (system env vars take precedence)
+load_dotenv(dotenv_path=BASE_DIR / ".env", override=False)
 
 # -----------------------------------------------------------------------------
 # Telegram Settings
 # -----------------------------------------------------------------------------
-TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+TELEGRAM_BOT_TOKEN: str = (
+    os.getenv("TELEGRAM_BOT_TOKEN") or os.getenv("BOT_TOKEN", "")
+).strip()
 
 # -----------------------------------------------------------------------------
 # Google Sheets Settings
@@ -31,7 +33,9 @@ TELEGRAM_BOT_TOKEN: str = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
 GOOGLE_APPS_SCRIPT_URL: str = os.getenv("GOOGLE_APPS_SCRIPT_URL", "").strip()
 
 # Option B1: Direct JSON Content in Environment Variable (Ideal for cloud hosting like Render/Railway)
-GOOGLE_CREDENTIALS_JSON: str = os.getenv("GOOGLE_CREDENTIALS_JSON", "").strip()
+GOOGLE_CREDENTIALS_JSON: str = (
+    os.getenv("GOOGLE_CREDENTIALS_JSON") or os.getenv("GOOGLE_CREDENTIALS", "")
+).strip()
 
 # Option B2: Google Service Account JSON file on disk
 _creds_path_str = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE", "credentials.json").strip()
@@ -48,7 +52,7 @@ GOOGLE_WORKSHEET_NAME: str = os.getenv("GOOGLE_WORKSHEET_NAME", "").strip()
 # -----------------------------------------------------------------------------
 def get_allowed_telegram_user_ids() -> set[int]:
     """Retrieves allowed Telegram User IDs, reloading from .env if updated."""
-    load_dotenv(dotenv_path=BASE_DIR / ".env", override=True)
+    load_dotenv(dotenv_path=BASE_DIR / ".env", override=False)
     raw_ids = os.getenv("ALLOWED_TELEGRAM_USER_IDS", "").strip()
     allowed: set[int] = set()
     if raw_ids:

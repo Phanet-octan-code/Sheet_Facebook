@@ -146,7 +146,21 @@ class SheetsService:
         # 1. Check direct JSON string in environment variable (Ideal for cloud hosting)
         if config.GOOGLE_CREDENTIALS_JSON:
             try:
-                info = json.loads(config.GOOGLE_CREDENTIALS_JSON)
+                raw_json = config.GOOGLE_CREDENTIALS_JSON.strip()
+                # Strip outer single or double quotes if added by shell or UI
+                if (raw_json.startswith("'") and raw_json.endswith("'")) or (
+                    raw_json.startswith('"') and raw_json.endswith('"')
+                ):
+                    raw_json = raw_json[1:-1].strip()
+
+                try:
+                    info = json.loads(raw_json)
+                except Exception:
+                    # Attempt base64 decoding if base64 encoded
+                    import base64
+                    decoded = base64.b64decode(raw_json).decode("utf-8")
+                    info = json.loads(decoded)
+
                 creds = Credentials.from_service_account_info(info, scopes=scopes)
                 return gspread.authorize(creds)
             except Exception as e:
