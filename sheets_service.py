@@ -15,6 +15,8 @@ Features:
 from __future__ import annotations
 
 import logging
+# pyrefly: ignore[missing-import]
+from pathlib import Path
 import time
 from datetime import datetime
 from typing import Any
