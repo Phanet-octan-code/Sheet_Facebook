@@ -17,8 +17,11 @@ import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
 
+# pyrefly: ignore[missing-import]
 from telegram import Update
+# pyrefly: ignore[missing-import]
 from telegram.constants import ParseMode
+# pyrefly: ignore[missing-import]
 from telegram.ext import (
     Application,
     ApplicationBuilder,

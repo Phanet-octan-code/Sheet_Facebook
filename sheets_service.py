@@ -135,7 +135,9 @@ class SheetsService:
     def _authenticate_gspread(self) -> Any:
         """Authenticates with Google Sheets API using Service Account Credentials."""
         import json
+        # pyrefly: ignore[missing-import]
         import gspread
+        # pyrefly: ignore[missing-import]
         from google.oauth2.service_account import Credentials
 
         scopes = [
